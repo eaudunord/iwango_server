@@ -1,5 +1,6 @@
 #pragma once
-#include <dcserver/asio.hpp>
+#include <boost/asio.hpp>
+namespace asio = boost::asio;
 #include <dcserver/shared_this.hpp>
 #include <array>
 
