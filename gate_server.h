@@ -1,6 +1,5 @@
 #pragma once
-#include <boost/asio.hpp>
-namespace asio = boost::asio;
+#include "asio_compat.h"
 #include <dcserver/shared_this.hpp>
 #include <array>
 
@@ -13,7 +12,7 @@ public:
 
 private:
 	GateServer(asio::io_context& io_context, uint16_t port);
-	void handleAccept(std::shared_ptr<GateConnection> newConnection, const asio::error_code& error);
+	void handleAccept(std::shared_ptr<GateConnection> newConnection, const boost::system::error_code& error);
 	void acceptNext();
 	void receiveUdp();
 

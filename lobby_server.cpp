@@ -39,7 +39,7 @@ void LobbyConnection::close()
 {
 	if (player)
 		INFO_LOG(player->gameId, "[%s] Connection closed for %s", player->getIp().c_str(), player->name.c_str());
-	asio::error_code ec;
+	boost::system::error_code ec;
 	timer.cancel(ec);
 	if (socket.is_open()) {
 		socket.shutdown(asio::socket_base::shutdown_both, ec);
@@ -48,7 +48,7 @@ void LobbyConnection::close()
 	player.reset();
 }
 
-void LobbyConnection::onReceive(const asio::error_code& ec, size_t len)
+void LobbyConnection::onReceive(const boost::system::error_code& ec, size_t len)
 {
 	if (ec || len < 10)
 	{
@@ -96,7 +96,7 @@ void LobbyConnection::onReceive(const asio::error_code& ec, size_t len)
 	receive();
 }
 
-void LobbyConnection::onSent(const asio::error_code& ec, size_t len)
+void LobbyConnection::onSent(const boost::system::error_code& ec, size_t len)
 {
 	if (ec)
 	{
@@ -115,7 +115,7 @@ void LobbyConnection::onSent(const asio::error_code& ec, size_t len)
 	}
 }
 
-void LobbyConnection::onTimeOut(const asio::error_code& ec)
+void LobbyConnection::onTimeOut(const boost::system::error_code& ec)
 {
 	if (ec) {
 		if (ec != asio::error::operation_aborted)
@@ -150,7 +150,7 @@ private:
 		acceptor.set_option(option);
 	}
 
-	void handleAccept(LobbyConnection::Ptr newConnection, const asio::error_code& error)
+	void handleAccept(LobbyConnection::Ptr newConnection, const boost::system::error_code& error)
 	{
 		if (!error)
 		{
@@ -183,7 +183,7 @@ public:
 	}
 
 private:
-	void onTimer(const asio::error_code& ec)
+	void onTimer(const boost::system::error_code& ec)
 	{
 		if (ec)
 			return;

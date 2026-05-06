@@ -223,7 +223,7 @@ private:
 					asio::placeholders::error(),
 					asio::placeholders::bytes_transferred()));
 	}
-	void onSent(const asio::error_code& ec, size_t len)
+	void onSent(const boost::system::error_code& ec, size_t len)
 	{
 		if (ec)
 		{
@@ -257,7 +257,7 @@ private:
 		return std::make_pair(begin + len, true);
 	}
 
-	void onReceive(const asio::error_code& ec, size_t len)
+	void onReceive(const boost::system::error_code& ec, size_t len)
 	{
 		if (ec || len < 2)
 		{
@@ -287,7 +287,7 @@ private:
 		send();
 	}
 
-	void onTimeOut(const asio::error_code& ec)
+	void onTimeOut(const boost::system::error_code& ec)
 	{
 		if (ec)
 			return;
@@ -301,7 +301,7 @@ private:
 
 	void close()
 	{
-		asio::error_code ignore;
+		boost::system::error_code ignore;
 		socket.shutdown(asio::socket_base::shutdown_both, ignore);
 		socket.close(ignore);
 		timer.cancel(ignore);
@@ -342,7 +342,7 @@ void GateServer::acceptNext()
 			boost::bind(&GateServer::handleAccept, shared_from_this(), newConnection, asio::placeholders::error()));
 }
 
-void GateServer::handleAccept(GateConnection::Ptr newConnection, const asio::error_code& error)
+void GateServer::handleAccept(GateConnection::Ptr newConnection, const boost::system::error_code& error)
 {
 	if (!error) {
 		INFO_LOG(GameId::Unknown, "gate: New connection from %s", newConnection->getSocket().remote_endpoint().address().to_string().c_str());
@@ -368,7 +368,7 @@ private:
 		buf.resize(payload.size() + 2);
 		*(uint16_t *)buf.data() = opcode;
 		memcpy(buf.data() + 2, payload.data(), payload.size());
-		asio::error_code ec;
+		boost::system::error_code ec;
 		socket.send_to(asio::buffer(buf), remote, 0, ec);
 	}
 
@@ -379,7 +379,7 @@ private:
 void GateServer::receiveUdp()
 {
 	udpSocket.async_receive_from(asio::buffer(recvbuf), source,
-		[this](const asio::error_code& ec, size_t len)
+		[this](const boost::system::error_code& ec, size_t len)
 		{
 			if (ec) {
 				ERROR_LOG(GameId::Unknown, "receive_from failed: %s", ec.message().c_str());

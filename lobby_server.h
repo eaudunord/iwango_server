@@ -1,7 +1,6 @@
 #pragma once
-#include <boost/asio.hpp>
+#include "asio_compat.h"
 #include <boost/bind/bind.hpp>
-namespace asio = boost::asio;
 #include <dcserver/shared_this.hpp>
 #include <stdio.h>
 #include <vector>
@@ -38,8 +37,8 @@ private:
 					asio::placeholders::error(),
 					asio::placeholders::bytes_transferred()));
 	}
-	void onSent(const asio::error_code& ec, size_t len);
-	void onTimeOut(const asio::error_code& ec);
+	void onSent(const boost::system::error_code& ec, size_t len);
+	void onTimeOut(const boost::system::error_code& ec);
 
 	using iterator = asio::buffers_iterator<asio::const_buffers_1>;
 
@@ -57,7 +56,7 @@ private:
 		return std::make_pair(begin + len, true);
 	}
 
-	void onReceive(const asio::error_code& ec, size_t len);
+	void onReceive(const boost::system::error_code& ec, size_t len);
 
 	asio::io_context& io_context;
 	asio::ip::tcp::socket socket;
