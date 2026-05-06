@@ -271,7 +271,7 @@ private:
 			return;
 		}
 		// Grab data and process if correct.
-		std::string payload = std::string(&recvBuffer.bytes()[2], &recvBuffer.bytes()[len]);
+		std::string payload = std::string(&bytes(recvBuffer)[2], &bytes(recvBuffer)[len]);
 		INFO_LOG(GameId::Unknown, "gate: [%s] Request [%s]", socket.remote_endpoint().address().to_string().c_str(), payload.c_str());
 		processRequest(payload);
 		recvBuffer.consume(len);

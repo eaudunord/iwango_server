@@ -72,8 +72,8 @@ void LobbyConnection::onReceive(const boost::system::error_code& ec, size_t len)
 		return;
 	}
 	// Grab data and process if correct.
-	uint16_t opcode = *(uint16_t *)&recvBuffer.bytes()[8];
-	std::vector<uint8_t> payload(&recvBuffer.bytes()[10], &recvBuffer.bytes()[len]);
+	uint16_t opcode = *(uint16_t *)&bytes(recvBuffer)[8];
+	std::vector<uint8_t> payload(&bytes(recvBuffer)[10], &bytes(recvBuffer)[len]);
 #ifndef NDEBUG
 	std::string s((char *)&payload[0], payload.size());
 	if (strlen(s.c_str()) != s.length())
