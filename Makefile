@@ -16,7 +16,7 @@ USER=dcnet
 all: iwango_server keycutter keycutter.cgi culdcept-gamedata
 
 iwango_server: lobby_server.o models.o packet_processor.o gate_server.o database.o discord.o common.o
-	$(CXX) $(CXXFLAGS) -o $@ lobby_server.o models.o packet_processor.o gate_server.o database.o discord.o common.o -lpthread -licuuc -lsqlite3 -ldcserver -Wl,-rpath,/usr/local/lib
+	$(CXX) $(CXXFLAGS) -o $@ lobby_server.o models.o packet_processor.o gate_server.o database.o discord.o common.o -lpthread -licuuc -lsqlite3 -ldcserver -lboost_system -Wl,-rpath,/usr/local/lib
 
 keycutter: keycutter.o sega_crypto.o
 	$(CXX) $(CXXFLAGS) -o keycutter keycutter.o sega_crypto.o
