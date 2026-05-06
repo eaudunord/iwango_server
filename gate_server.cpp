@@ -2,6 +2,7 @@
 #include "database.h"
 #include "gate_server.h"
 #include "models.h"
+#include <boost/bind/bind.hpp>
 #include <stdio.h>
 #include <vector>
 #include <algorithm>
@@ -193,9 +194,9 @@ public:
 		if (localAddress.empty())
 			localAddress = socket.local_endpoint().address().to_string();
 		timer.expires_at(asio::chrono::steady_clock::now() + asio::chrono::seconds(60));
-		timer.async_wait(std::bind(&GateConnection::onTimeOut, shared_from_this(), asio::placeholders::error));
+		timer.async_wait(boost::bind(&GateConnection::onTimeOut, shared_from_this(), asio::placeholders::error()));
 		asio::async_read_until(socket, recvBuffer, packetMatcher,
-				std::bind(&GateConnection::onReceive, shared_from_this(), asio::placeholders::error, asio::placeholders::bytes_transferred));
+				boost::bind(&GateConnection::onReceive, shared_from_this(), asio::placeholders::error(), asio::placeholders::bytes_transferred()));
 	}
 
 	void send(const std::vector<uint8_t>& data)
@@ -218,11 +219,11 @@ private:
 		sending = true;
 		uint16_t packetSize = *(uint16_t *)&sendBuffer[0] + 2;
 		asio::async_write(socket, asio::buffer(sendBuffer, packetSize),
-			std::bind(&GateConnection::onSent, shared_from_this(),
-					asio::placeholders::error,
-					asio::placeholders::bytes_transferred));
+			boost::bind(&GateConnection::onSent, shared_from_this(),
+					asio::placeholders::error(),
+					asio::placeholders::bytes_transferred()));
 	}
-	void onSent(const std::error_code& ec, size_t len)
+	void onSent(const asio::error_code& ec, size_t len)
 	{
 		if (ec)
 		{
@@ -256,7 +257,7 @@ private:
 		return std::make_pair(begin + len, true);
 	}
 
-	void onReceive(const std::error_code& ec, size_t len)
+	void onReceive(const asio::error_code& ec, size_t len)
 	{
 		if (ec || len < 2)
 		{
@@ -286,7 +287,7 @@ private:
 		send();
 	}
 
-	void onTimeOut(const std::error_code& ec)
+	void onTimeOut(const asio::error_code& ec)
 	{
 		if (ec)
 			return;
@@ -300,7 +301,7 @@ private:
 
 	void close()
 	{
-		std::error_code ignore;
+		asio::error_code ignore;
 		socket.shutdown(asio::socket_base::shutdown_both, ignore);
 		socket.close(ignore);
 		timer.cancel(ignore);
@@ -338,10 +339,10 @@ void GateServer::acceptNext()
 	GateConnection::Ptr newConnection = GateConnection::create(io_context);
 
 	acceptor.async_accept(newConnection->getSocket(),
-			std::bind(&GateServer::handleAccept, shared_from_this(), newConnection, asio::placeholders::error));
+			boost::bind(&GateServer::handleAccept, shared_from_this(), newConnection, asio::placeholders::error()));
 }
 
-void GateServer::handleAccept(GateConnection::Ptr newConnection, const std::error_code& error)
+void GateServer::handleAccept(GateConnection::Ptr newConnection, const asio::error_code& error)
 {
 	if (!error) {
 		INFO_LOG(GameId::Unknown, "gate: New connection from %s", newConnection->getSocket().remote_endpoint().address().to_string().c_str());
@@ -367,7 +368,7 @@ private:
 		buf.resize(payload.size() + 2);
 		*(uint16_t *)buf.data() = opcode;
 		memcpy(buf.data() + 2, payload.data(), payload.size());
-		std::error_code ec;
+		asio::error_code ec;
 		socket.send_to(asio::buffer(buf), remote, 0, ec);
 	}
 
@@ -378,7 +379,7 @@ private:
 void GateServer::receiveUdp()
 {
 	udpSocket.async_receive_from(asio::buffer(recvbuf), source,
-		[this](const std::error_code& ec, size_t len)
+		[this](const asio::error_code& ec, size_t len)
 		{
 			if (ec) {
 				ERROR_LOG(GameId::Unknown, "receive_from failed: %s", ec.message().c_str());
@@ -391,5 +392,4 @@ void GateServer::receiveUdp()
 			processor.processRequest(payload);
 			receiveUdp();
 		});
-
 }

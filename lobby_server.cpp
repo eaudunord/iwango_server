@@ -3,6 +3,7 @@
 #include "models.h"
 #include "database.h"
 #include <dcserver/status.hpp>
+#include <boost/bind/bind.hpp>
 #include <fstream>
 #include <unordered_map>
 
@@ -18,9 +19,9 @@ static std::unordered_map<std::string, std::string> Config;
 void LobbyConnection::receive()
 {
 	timer.expires_at(asio::chrono::steady_clock::now() + asio::chrono::seconds(60));
-	timer.async_wait(std::bind(&LobbyConnection::onTimeOut, shared_from_this(), asio::placeholders::error));
+	timer.async_wait(boost::bind(&LobbyConnection::onTimeOut, shared_from_this(), asio::placeholders::error()));
 	asio::async_read_until(socket, recvBuffer, packetMatcher,
-			std::bind(&LobbyConnection::onReceive, shared_from_this(), asio::placeholders::error, asio::placeholders::bytes_transferred));
+			boost::bind(&LobbyConnection::onReceive, shared_from_this(), asio::placeholders::error(), asio::placeholders::bytes_transferred()));
 }
 
 void LobbyConnection::send(const std::vector<uint8_t>& data)
@@ -47,7 +48,7 @@ void LobbyConnection::close()
 	player.reset();
 }
 
-void LobbyConnection::onReceive(const std::error_code& ec, size_t len)
+void LobbyConnection::onReceive(const asio::error_code& ec, size_t len)
 {
 	if (ec || len < 10)
 	{
@@ -95,7 +96,7 @@ void LobbyConnection::onReceive(const std::error_code& ec, size_t len)
 	receive();
 }
 
-void LobbyConnection::onSent(const std::error_code& ec, size_t len)
+void LobbyConnection::onSent(const asio::error_code& ec, size_t len)
 {
 	if (ec)
 	{
@@ -114,7 +115,7 @@ void LobbyConnection::onSent(const std::error_code& ec, size_t len)
 	}
 }
 
-void LobbyConnection::onTimeOut(const std::error_code& ec)
+void LobbyConnection::onTimeOut(const asio::error_code& ec)
 {
 	if (ec) {
 		if (ec != asio::error::operation_aborted)
@@ -135,7 +136,7 @@ public:
 		LobbyConnection::Ptr newConnection = LobbyConnection::create(io_context);
 
 		acceptor.async_accept(newConnection->getSocket(),
-				std::bind(&LobbyAcceptor::handleAccept, shared_from_this(), newConnection, asio::placeholders::error));
+				boost::bind(&LobbyAcceptor::handleAccept, shared_from_this(), newConnection, asio::placeholders::error()));
 	}
 
 private:
@@ -149,7 +150,7 @@ private:
 		acceptor.set_option(option);
 	}
 
-	void handleAccept(LobbyConnection::Ptr newConnection, const std::error_code& error)
+	void handleAccept(LobbyConnection::Ptr newConnection, const asio::error_code& error)
 	{
 		if (!error)
 		{
@@ -182,7 +183,7 @@ public:
 	}
 
 private:
-	void onTimer(const std::error_code& ec)
+	void onTimer(const asio::error_code& ec)
 	{
 		if (ec)
 			return;
@@ -191,7 +192,7 @@ private:
 		else
 			status::ping("iwango");
 		timer.expires_at(asio::chrono::steady_clock::now() + asio::chrono::seconds(status::pingInterval()));
-		timer.async_wait(std::bind(&StatusUpdater::onTimer, this, asio::placeholders::error));
+		timer.async_wait(boost::bind(&StatusUpdater::onTimer, this, asio::placeholders::error()));
 	}
 
 	asio::io_context& io_context;

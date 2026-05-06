@@ -13,7 +13,7 @@ public:
 
 private:
 	GateServer(asio::io_context& io_context, uint16_t port);
-	void handleAccept(std::shared_ptr<GateConnection> newConnection, const std::error_code& error);
+	void handleAccept(std::shared_ptr<GateConnection> newConnection, const asio::error_code& error);
 	void acceptNext();
 	void receiveUdp();
 

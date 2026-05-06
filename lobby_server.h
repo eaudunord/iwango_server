@@ -1,5 +1,6 @@
 #pragma once
 #include <boost/asio.hpp>
+#include <boost/bind/bind.hpp>
 namespace asio = boost::asio;
 #include <dcserver/shared_this.hpp>
 #include <stdio.h>
@@ -33,12 +34,12 @@ private:
 		sending = true;
 		uint16_t packetSize = *(uint16_t *)&sendBuffer[0] + 2;
 		asio::async_write(socket, asio::buffer(sendBuffer, packetSize),
-			std::bind(&LobbyConnection::onSent, shared_from_this(),
-					asio::placeholders::error,
-					asio::placeholders::bytes_transferred));
+			boost::bind(&LobbyConnection::onSent, shared_from_this(),
+					asio::placeholders::error(),
+					asio::placeholders::bytes_transferred()));
 	}
-	void onSent(const std::error_code& ec, size_t len);
-	void onTimeOut(const std::error_code& ec);
+	void onSent(const asio::error_code& ec, size_t len);
+	void onTimeOut(const asio::error_code& ec);
 
 	using iterator = asio::buffers_iterator<asio::const_buffers_1>;
 
@@ -56,7 +57,7 @@ private:
 		return std::make_pair(begin + len, true);
 	}
 
-	void onReceive(const std::error_code& ec, size_t len);
+	void onReceive(const asio::error_code& ec, size_t len);
 
 	asio::io_context& io_context;
 	asio::ip::tcp::socket socket;
