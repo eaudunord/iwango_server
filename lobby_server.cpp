@@ -254,6 +254,7 @@ int main(int argc, char *argv[])
 
 	NOTICE_LOG(GameId::Unknown, "IWANGO Emulator: Gate Server by Ioncannon");
 	GateServer::Ptr gateServer = GateServer::create(io_context, 9500);
+	gateServer->setAdvertiseAddress(getConfig("AdvertiseAddress", ""));
 	gateServer->start();
 
 	NOTICE_LOG(GameId::Unknown, "IWANGO Emulator: Lobby Server by Ioncannon");

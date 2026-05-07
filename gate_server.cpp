@@ -354,11 +354,10 @@ void GateServer::handleAccept(GateConnection::Ptr newConnection, const boost::sy
 class UdpGateProcessor : public GateProcessor
 {
 public:
-	UdpGateProcessor(asio::ip::udp::socket& socket, const asio::ip::udp::endpoint& remote)
+	UdpGateProcessor(asio::ip::udp::socket& socket, const asio::ip::udp::endpoint& remote, const std::string& localAddress)
 		: socket(socket), remote(remote)
 	{
-		// FIXME no easy way to get the local address with UDP
-		localAddress = "172.20.0.1";
+		this->localAddress = localAddress;
 	}
 
 private:
@@ -388,7 +387,10 @@ void GateServer::receiveUdp()
 			//dump(recvbuf.data(), len);
 			std::string payload((const char *)recvbuf.data(), len);
 			DEBUG_LOG(GameId::Unknown, "gate: [%s] Request [%s]", source.address().to_string().c_str(), payload.c_str());
-			UdpGateProcessor processor(udpSocket, source);
+			std::string localAddress = advertiseAddress;
+			if (localAddress.empty())
+				localAddress = udpSocket.local_endpoint().address().to_string();
+			UdpGateProcessor processor(udpSocket, source, localAddress);
 			processor.processRequest(payload);
 			receiveUdp();
 		});
