@@ -38,6 +38,7 @@ const char *Games[] = {
 	"psmash",
 	"yakyuu",
 	"runejade",
+	"vonot",
 };
 
 void logger(Log::LEVEL level, GameId gameId, const char* file, int line, const char *format, ...)

@@ -334,6 +334,23 @@ int Player::send(uint16_t opcode, const uint8_t *payload, unsigned length)
 		WARN_LOG(gameId, "player %s has a null connection", name.c_str());
 		return 0;
 	}
+#ifndef NDEBUG
+	if (strlen((const char *)payload) != length)
+	{
+		std::string hexdump;
+		for (unsigned i = 0; i < length; i++)
+		{
+			char hexbyte[3];
+			sprintf(hexbyte, "%02x", payload[i]);
+			hexdump += std::string(hexdump.empty() ? "" : " ") + std::string(hexbyte);
+		}
+		DEBUG_LOG(gameId, "[%s] -> %04x [%s]", name.c_str(), opcode, hexdump.c_str());
+	}
+	else {
+		DEBUG_LOG(gameId, "[%s] -> %04x [%s]", name.c_str(), opcode, sjisToUtf8((const char *)payload).c_str());
+	}
+#endif
+
 	std::vector<uint8_t> data = makePacket(opcode, payload, length);
 	connection->send(data);
 	return data.size();
@@ -490,6 +507,13 @@ LobbyServer::LobbyServer(GameId gameId, const std::string& name)
 		// Rune Jade creates its own lobby
 		break;
 
+	case GameId::VirtualOn:
+		createLobby("VOOTEASY", 100);
+		createLobby("VOOTEXPT", 100);
+		createLobby("VOOTCHAT", 100);
+		createLobby("VOOTOPRM", 100);
+		break;
+
 	default:
 		createLobby("2P_Red", 100);
 		createLobby("4P_Yellow", 100);
@@ -515,6 +539,7 @@ uint16_t LobbyServer::getIpPort() const
 	case GameId::PowerSmash: return 9508;
 	case GameId::YakyuuTeam: return 9509;
 	case GameId::RuneJade: return 9510;
+	case GameId::VirtualOn: return 9511;
 	default: assert(false); return 0;
 	}
 }
@@ -533,6 +558,7 @@ std::string LobbyServer::getGameName() const
 	case GameId::PowerSmash: return "HDR-0113";
 	case GameId::YakyuuTeam: return "HDR-0091";
 	case GameId::RuneJade: return "RUNEJADE";
+	case GameId::VirtualOn: return "VO";
 	default: assert(false); return "???";
 	}
 }

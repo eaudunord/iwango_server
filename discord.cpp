@@ -32,6 +32,7 @@ const char *getDCNetGameId(GameId gameId)
 		"powersmash",
 		"yakyuunet",
 		"runejade",
+		"virtualon",
 	};
 	if (gameId == GameId::Unknown || (size_t)gameId >= std::size(gameIds))
 		return nullptr;

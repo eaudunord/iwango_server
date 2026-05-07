@@ -157,7 +157,7 @@ void updateExtraUserMem(GameId gameId, const std::string& user, const uint8_t *d
 		else
 		{
 			Statement stmt(db, "UPDATE USER_EXTRAMEM SET EXTRAMEM = ? WHERE USER_NAME = ? AND GAME = ?");
-			stmt.bind(1, data, size);
+			stmt.bind(1, blob.data(), blob.size());
 			stmt.bind(2, user);
 			stmt.bind(3, (int)gameId);
 			stmt.step();

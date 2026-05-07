@@ -10,6 +10,8 @@
 #define LOCALSTATEDIR "./"
 #endif
 
+using namespace std::chrono_literals;
+
 static asio::io_context io_context;
 static std::unordered_map<std::string, std::string> Config;
 
@@ -72,9 +74,6 @@ void LobbyConnection::onReceive(const std::error_code& ec, size_t len)
 	uint16_t opcode = *(uint16_t *)&recvBuffer.bytes()[8];
 	std::vector<uint8_t> payload(&recvBuffer.bytes()[10], &recvBuffer.bytes()[len]);
 #ifndef NDEBUG
-	//uint16_t unk1 = *(uint16_t *)&recvBuffer.bytes()[2];
-	uint16_t sequence = *(uint16_t *)&recvBuffer.bytes()[4];
-	//uint16_t unk2 = *(uint16_t *)&recvBuffer.bytes()[6];
 	std::string s((char *)&payload[0], payload.size());
 	if (strlen(s.c_str()) != s.length())
 	{
@@ -85,10 +84,10 @@ void LobbyConnection::onReceive(const std::error_code& ec, size_t len)
 			sprintf(hexbyte, "%02x", b);
 			hexdump += std::string(hexdump.empty() ? "" : " ") + std::string(hexbyte);
 		}
-		DEBUG_LOG(player->gameId, "Request[%d]: %04x [%s]", sequence, opcode, hexdump.c_str());
+		DEBUG_LOG(player->gameId, "[%s] <- %04x [%s]", player->name.c_str(), opcode, hexdump.c_str());
 	}
 	else {
-		DEBUG_LOG(player->gameId, "Request[%d]: %04x [%s]", sequence, opcode, sjisToUtf8(s).c_str());
+		DEBUG_LOG(player->gameId, "[%s] <- %04x [%s]", player->name.c_str(), opcode, sjisToUtf8(s).c_str());
 	}
 #endif
 	player->receive(opcode, payload);
@@ -179,20 +178,22 @@ public:
 	}
 
 	void start() {
-		status::reset("iwango");
 		onTimer({});
 	}
 
+private:
 	void onTimer(const std::error_code& ec)
 	{
 		if (ec)
 			return;
-		status::ping("iwango");
+		if (timer.expiry().time_since_epoch() == 0ms)
+			status::reset("iwango");
+		else
+			status::ping("iwango");
 		timer.expires_at(asio::chrono::steady_clock::now() + asio::chrono::seconds(status::pingInterval()));
 		timer.async_wait(std::bind(&StatusUpdater::onTimer, this, asio::placeholders::error));
 	}
 
-private:
 	asio::io_context& io_context;
 	asio::steady_timer timer;
 };
@@ -299,6 +300,11 @@ int main(int argc, char *argv[])
 	runeJadeServer.setMotd(getConfig("RuneJadeMOTD", runeJadeServer.getMotd()));
 	LobbyAcceptor::Ptr runeJadeAcceptor = LobbyAcceptor::create(io_context, runeJadeServer);
 	runeJadeAcceptor->start();
+
+	LobbyServer vonotServer(GameId::VirtualOn, getConfig("VirtualOnServerName", "DCNet"));
+	vonotServer.setMotd(getConfig("VirtualOnMOTD", vonotServer.getMotd()));
+	LobbyAcceptor::Ptr vonotAcceptor = LobbyAcceptor::create(io_context, vonotServer);
+	vonotAcceptor->start();
 
 	StatusUpdater statusUpdater(io_context);
 	statusUpdater.start();

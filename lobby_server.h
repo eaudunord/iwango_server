@@ -57,15 +57,6 @@ private:
 
 	void onReceive(const std::error_code& ec, size_t len);
 
-	void sendPacket(uint16_t opcode, const std::string& payload = {})
-	{
-		*(uint16_t *)&sendBuffer[sendIdx] = payload.size() + 2;
-		*(uint16_t *)&sendBuffer[sendIdx + 2] = opcode;
-		memcpy(&sendBuffer[sendIdx + 4], payload.data(), payload.length());
-		sendIdx += 4 + payload.length();
-		send();
-	}
-
 	asio::io_context& io_context;
 	asio::ip::tcp::socket socket;
 	asio::steady_timer timer;
