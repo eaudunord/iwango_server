@@ -91,13 +91,23 @@ static void loginCommand(Player::Ptr player, const std::vector<uint8_t>&, const 
 	time(&now);
 	struct tm *tm = localtime(&now);
 	sstream ss;
-	ss << "0100 0102 " << (tm->tm_year + 1900)
+	ss << (tm->tm_year + 1900)
 	   << ":" << (tm->tm_mon + 1)
 	   << ":" << tm->tm_mday
 	   << ":" << tm->tm_hour
 	   << ":" << tm->tm_min
 	   << ":" << tm->tm_sec;
-	player->send(S_LOGIN_OK, ss.str());
+	if (player->gameId == GameId::VirtualOn)
+	{
+		// VOOT captures show the login-OK payload uses status fields, not IP bytes.
+		std::string payload = "1 1 " + ss.str();
+		payload.push_back('\0');
+		player->send(S_LOGIN_OK, payload);
+	}
+	else
+	{
+		player->send(S_LOGIN_OK, "0100 0102 " + ss.str());
+	}
 	status::join(getDCNetGameId(player->gameId), player->getIp(), player->getPort(), player->name);
 }
 
@@ -558,4 +568,3 @@ void PacketProcessor::handlePacket(Player::Ptr player, uint16_t opcode, const st
 	else
 		WARN_LOG(player->gameId, "Received unknown opcode: 0x%02x -> %s", opcode, payloadAsString.c_str());
 }
-
